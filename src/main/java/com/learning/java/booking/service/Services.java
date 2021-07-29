@@ -1,21 +1,19 @@
 package com.learning.java.booking.service;
 
 
-import org.springframework.stereotype.Service;
 import com.learning.java.booking.rooms.Room;
+import org.springframework.stereotype.Service;
 
 import java.util.Map;
 
 @Service
 public class Services {
 
-    private Map<String, Room> listRoom;
-
+    private final Map<String, Room> listRoom;
 
     public Services(Map<String, Room> listRoom) {
         this.listRoom = listRoom;
     }
-
 
     /**
      * Provide information is room occupied
@@ -24,13 +22,15 @@ public class Services {
      */
     public String getRoomStatus(String name) {
         if (name == null) {
-            return "wrong room name";
+            throw new IllegalArgumentException("name is null");
         }
+
         Room room = listRoom.get(name);
         if (room == null) {
-            return "Room is not found";
+            return "not found";
         }
-        String isFree = room.isFree() ? " is free" : " is occupied";
-        return "Room " + room.getName() + isFree;
+
+        String status = room.isFree() ? "free" : "occupied";
+        return String.format("Room %s is %s", room.getName(), status);
     }
 }

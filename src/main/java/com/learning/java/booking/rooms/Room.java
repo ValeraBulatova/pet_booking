@@ -9,11 +9,11 @@ import java.time.LocalTime;
 //@Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class Room {
 
-    private String name;
+    private final String name;
 
-    private int id;
+    private final int id;
 
-    private boolean free;
+    private final boolean free;
 
     private LocalTime time;
 
