@@ -4,17 +4,16 @@ package com.learning.java.booking.service;
 import org.springframework.stereotype.Service;
 import com.learning.java.booking.rooms.Room;
 
-import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class Services {
 
-    private HashMap<String, Room> listRoom = new HashMap<>();
+    private Map<String, Room> listRoom;
 
-    public Services() {
-        listRoom.put("A", new Room("A", 1, true));
-        listRoom.put("B", new Room("B", 2, false));
-        listRoom.put("C", new Room("C", 3, true));
+
+    public Services(Map<String, Room> listRoom) {
+        this.listRoom = listRoom;
     }
 
 
@@ -23,12 +22,15 @@ public class Services {
      * @param name - required room
      * @return information about room
      */
-    public String roomStatus(String name) {
-        String isFree = " is occupied";
-        if(listRoom.get(name).isFree()) isFree = " is free";
-        return "Room " + listRoom.get(name).getName() + isFree;
+    public String getRoomStatus(String name) {
+        if (name == null) {
+            return "wrong room name";
+        }
+        Room room = listRoom.get(name);
+        if (room == null) {
+            return "Room is not found";
+        }
+        String isFree = room.isFree() ? " is free" : " is occupied";
+        return "Room " + room.getName() + isFree;
     }
-
-
-
 }

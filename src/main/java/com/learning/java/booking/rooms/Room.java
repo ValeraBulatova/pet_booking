@@ -1,8 +1,11 @@
 package com.learning.java.booking.rooms;
 
-import java.time.LocalDate;
+import org.springframework.stereotype.Component;
 
-//@Component("room")
+import java.time.LocalDate;
+import java.time.LocalTime;
+
+//@Component("room") read docs
 //@Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class Room {
 
@@ -12,9 +15,9 @@ public class Room {
 
     private boolean free;
 
-    private LocalDate date;
+    private LocalTime time;
 
-    public Room(String name,  int id, boolean free){
+    public Room(String name, int id, boolean free) {
         this.name = name;
         this.id = id;
         this.free = free;
