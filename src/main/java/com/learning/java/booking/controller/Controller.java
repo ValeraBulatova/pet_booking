@@ -1,8 +1,7 @@
 package com.learning.java.booking.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import com.learning.java.booking.model.BookRequest;
+import org.springframework.web.bind.annotation.*;
 import com.learning.java.booking.service.Services;
 
 
@@ -20,5 +19,10 @@ public class Controller {
     @GetMapping("/valera")
     public String getRoomStatus(@RequestParam(value = "name", defaultValue = "B") String name) {
         return services.getRoomStatus(name);
+    }
+
+    @PostMapping("/valera")
+    public String bookRequiredRoom(@RequestBody BookRequest req) {
+        return services.bookRoom(req.roomName, req.minutes);
     }
 }

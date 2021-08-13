@@ -1,6 +1,6 @@
 package com.learning.java.booking;
 
-import com.learning.java.booking.rooms.Room;
+import com.learning.java.booking.model.Room;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

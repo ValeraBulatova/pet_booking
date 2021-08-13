@@ -1,21 +1,19 @@
-package com.learning.java.booking.rooms;
+package com.learning.java.booking.model;
 
-import org.springframework.stereotype.Component;
+import java.time.Instant;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
 
-//@Component("room") read docs
-//@Scope(value = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class Room {
 
     private final String name;
 
     private final int id;
 
-    private final boolean free;
+    private boolean free;
 
-    private LocalTime time;
+    private Instant bookTime;
+
+    private int bookFor;
 
     public Room(String name, int id, boolean free) {
         this.name = name;
@@ -29,6 +27,14 @@ public class Room {
 
     public boolean isFree () {
         return free;
+    }
+
+    public void setFree(boolean free) {
+        this.free = free;
+    }
+
+    public void setBookTime(Instant bookTime) {
+        this.bookTime = bookTime;
     }
 
     public int getId(){
