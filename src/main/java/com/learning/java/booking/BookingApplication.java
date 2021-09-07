@@ -15,6 +15,7 @@ public class BookingApplication {
 	}
 
 //	open http://localhost:8080/valera to see the result
+	// TODO: 07.09.2021 fix it
 
 	@GetMapping("/valera")
 	public String hello(@RequestParam(value = "name", defaultValue = "Valera") String name) {
