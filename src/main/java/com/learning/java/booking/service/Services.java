@@ -13,12 +13,15 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class Services {
 
-    private final Map<String, Room> listRoom;
+    private final Map<String, Room> rooms;
 
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
-    public Services(Map<String, Room> listRoom) {
-        this.listRoom = listRoom;
+    private JdbcService jdbcService;
+
+    public Services(JdbcService jdbcService) {
+        this.jdbcService = jdbcService;
+        this.rooms = jdbcService.geAllRooms();
     }
 
     /**
@@ -31,7 +34,7 @@ public class Services {
             throw new IllegalArgumentException("name is null");
         }
 
-        Room room = listRoom.get(name);
+        Room room = rooms.get(name);
         if (room == null) {
             return "not found";
         }
@@ -41,12 +44,15 @@ public class Services {
     }
 
     public String bookRoom(String roomName, int minutes) {
-// TODO: 13.08.2021 check for minutes
+
+        if(minutes > 120) {
+            return "Maximum allowed startTimeSeconds is 2 hours";
+        }
         if(roomName == null) {
-            return "";
+            return "Please input the room name";
         }
 
-        Room room = listRoom.get(roomName);
+        Room room = rooms.get(roomName);
 
         if(room == null){
             return "Invalid room name";
@@ -56,11 +62,13 @@ public class Services {
             return String.format("Room %s is occupied", roomName);
         }
 
-        executorService.schedule(() -> room.setFree(true), minutes, TimeUnit.MINUTES);
+        executorService.schedule(() -> jdbcService.unbookRoomInDataBase(roomName), minutes, TimeUnit.MINUTES);
 
         Instant startTime = Instant.now();
-        room.setBookTime(startTime);
-        room.setFree(false);
+
+        long startTimeSeconds = startTime.getEpochSecond();
+        long bookForSeconds = startTimeSeconds + TimeUnit.MINUTES.toSeconds(minutes);
+        jdbcService.bookRoomInDataBase(roomName, startTimeSeconds, bookForSeconds);
 
         return String.format("Room %s is booked", roomName);
     }
