@@ -18,7 +18,8 @@ public class Controller {
 
     @GetMapping("/valera")
     public String getRoomStatus(@RequestParam(value = "name", defaultValue = "B") String name) {
-        return services.getRoomStatus(name);
+//        return services.getRoomStatus(name);
+        return services.getStatusOfAllRooms();
     }
 
     @PostMapping("/valera")
