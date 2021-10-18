@@ -1,6 +1,8 @@
 package com.learning.java.booking.service;
 
 import com.learning.java.booking.model.Room;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.sql.*;
@@ -10,7 +12,7 @@ import java.util.*;
 @Service
 public class JdbcService {
 
-    private static final System.Logger LOGGER = System.getLogger("jdbcLogger");
+//    private final Logger LOGGER = LoggerFactory.getLogger(JdbcService.class);
 
     private static final String JDBC_DRIVER     = "org.h2.Driver";
     private static final String DB_URL          = "jdbc:h2:~/test";
@@ -29,13 +31,11 @@ public class JdbcService {
             return statement.executeUpdate(query);
 
         }catch (SQLException e){
-            // TODO: 06.09.2021 handel exception
-            e.printStackTrace();
+//            LOGGER.error("SQL request failed", e);
             return 0;
         }
 
     }
-// TODO: 06.09.2021 make in controller
 
     Map<String, Room> geAllRooms() {
 
@@ -47,24 +47,28 @@ public class JdbcService {
             Map<String, Room> rooms = new HashMap<>();
             while (resultSet.next()) {
                 Room room = mapResultToRoom(resultSet);
+                assert room != null;
                 rooms.put(room.getName(), room);
             }
-            LOGGER.log(System.Logger.Level.INFO, String.format("%d rooms were fetched", rooms.size()));
+//            LOGGER.info(String.format("%d rooms were fetched", rooms.size()));
             return rooms;
 
         } catch (SQLException e) {
-            // TODO: 20.08.2021 handle exception
-            e.printStackTrace();
+//            LOGGER.error("SQL Request failed", e);
             return null;
         }
     }
 
     private Room mapResultToRoom(ResultSet result) throws SQLException {
-        // TODO: 20.08.2021 check for empty
-        String name = result.getString("name");
-        int id = result.getInt("id");
-        boolean free = result.getBoolean("is_free");
-        return new Room(name, id, free);
+        if(result != null) {
+            String name = result.getString("name");
+            int id = result.getInt("id");
+            boolean free = result.getBoolean("is_free");
+            return new Room(name, id, free);
+        }else {
+//            LOGGER.error("Room was not received from database");
+            return null;
+        }
     }
 
 
@@ -79,12 +83,13 @@ public class JdbcService {
     }
 
 
-    boolean unbookRoomInDataBase(String roomName){
+    boolean unbookRoomInDataBase(String roomName) {
         String request = String.format("update rooms set is_free = 'true', " +
                 "book_time = null, " +
                 "book_for = null " +
                 "where name = '%s'", roomName);
         int result = requestToDataBase(request);
+//        LOGGER.info(String.format("Request to set room %s free was executed", roomName));
         return result != 0;
     }
 

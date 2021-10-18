@@ -2,6 +2,8 @@ package com.learning.java.booking.service;
 
 
 import com.learning.java.booking.model.Room;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -18,6 +20,8 @@ public class Services {
     private Map<String, Room> rooms;
 
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+//    private final Logger LOGGER = LoggerFactory.getLogger(Services.class);
+
 
     private JdbcService jdbcService;
 
