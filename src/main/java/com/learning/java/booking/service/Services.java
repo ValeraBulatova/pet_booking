@@ -20,10 +20,10 @@ public class Services {
     private Map<String, Room> rooms;
 
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-//    private final Logger LOGGER = LoggerFactory.getLogger(Services.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(Services.class);
 
 
-    private JdbcService jdbcService;
+    final private JdbcService jdbcService;
 
     public Services(JdbcService jdbcService) {
         this.jdbcService = jdbcService;
@@ -45,6 +45,7 @@ public class Services {
 
         Room room = rooms.get(name);
         if (room == null) {
+            LOGGER.info(String.format("Room %s was not found in database", name));
             return "not found";
         }
 
@@ -67,7 +68,9 @@ public class Services {
     public String bookRoom(String roomName, int minutes) {
 
         if(minutes > 120) {
-            return "Maximum allowed startTimeSeconds is 2 hours";
+            return "Maximum allowed time for booking is 2 hours";
+        }else if (minutes < 15) {
+            return "Minimum allowed time for booking is 15 minutes";
         }
         if(roomName == null) {
             return "Please input the room name";
@@ -77,6 +80,7 @@ public class Services {
         Room room = rooms.get(roomName);
 
         if(room == null){
+            LOGGER.info(String.format("Room %s was not found in database", roomName));
             return "Invalid room name";
         }
 

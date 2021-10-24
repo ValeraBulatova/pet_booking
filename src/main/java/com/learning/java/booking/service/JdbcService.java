@@ -12,7 +12,7 @@ import java.util.*;
 @Service
 public class JdbcService {
 
-//    private final Logger LOGGER = LoggerFactory.getLogger(JdbcService.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(JdbcService.class);
 
     private static final String JDBC_DRIVER     = "org.h2.Driver";
     private static final String DB_URL          = "jdbc:h2:~/test";
@@ -31,7 +31,7 @@ public class JdbcService {
             return statement.executeUpdate(query);
 
         }catch (SQLException e){
-//            LOGGER.error("SQL request failed", e);
+            LOGGER.error("SQL request failed", e);
             return 0;
         }
 
@@ -50,11 +50,11 @@ public class JdbcService {
                 assert room != null;
                 rooms.put(room.getName(), room);
             }
-//            LOGGER.info(String.format("%d rooms were fetched", rooms.size()));
+            LOGGER.info(String.format("%d rooms were fetched", rooms.size()));
             return rooms;
 
         } catch (SQLException e) {
-//            LOGGER.error("SQL Request failed", e);
+            LOGGER.error("SQL Request failed", e);
             return null;
         }
     }
@@ -66,7 +66,7 @@ public class JdbcService {
             boolean free = result.getBoolean("is_free");
             return new Room(name, id, free);
         }else {
-//            LOGGER.error("Room was not received from database");
+            LOGGER.error("Room was not received from database");
             return null;
         }
     }
@@ -89,7 +89,7 @@ public class JdbcService {
                 "book_for = null " +
                 "where name = '%s'", roomName);
         int result = requestToDataBase(request);
-//        LOGGER.info(String.format("Request to set room %s free was executed", roomName));
+        LOGGER.info(String.format("Request to set room %s free was executed", roomName));
         return result != 0;
     }
 
