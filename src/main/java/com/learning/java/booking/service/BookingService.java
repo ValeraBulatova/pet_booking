@@ -2,6 +2,7 @@ package com.learning.java.booking.service;
 
 
 import com.learning.java.booking.model.Room;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -14,16 +15,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+// TODO: 27.10.2021 tests
 @Service
-public class Services {
+public class BookingService {
 
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-    private final Logger LOGGER = LoggerFactory.getLogger(Services.class);
-
+    private final Logger LOGGER = LoggerFactory.getLogger(BookingService.class);
 
     private final JdbcService jdbcService;
 
-    public Services(JdbcService jdbcService) {
+    public BookingService(JdbcService jdbcService) {
         this.jdbcService = jdbcService;
     }
 
@@ -66,24 +67,24 @@ public class Services {
 
     public String bookRoom(String roomName, int minutes) {
 
-        if(minutes > 120) {
+        if (minutes > 120) {
             return "Maximum allowed time for booking is 2 hours";
-        }else if (minutes < 15) {
+        } else if (minutes < 15) {
             return "Minimum allowed time for booking is 15 minutes";
         }
-        if(roomName == null) {
+        if (StringUtils.isEmpty(StringUtils.trim(roomName))) {
             return "Please input the room name";
         }
 
         Map<String, Room> rooms = jdbcService.geAllRooms();
         Room room = rooms.get(roomName);
 
-        if(room == null){
+        if (room == null) {
             LOGGER.info(String.format("Room %s was not found in database", roomName));
             return "Invalid room name";
         }
 
-        if (!room.isFree()){
+        if (!room.isFree()) {
             return String.format("Room %s is occupied", roomName);
         }
 
@@ -93,8 +94,8 @@ public class Services {
 
         long startTimeSeconds = startTime.getEpochSecond();
         long bookForSeconds = startTimeSeconds + TimeUnit.MINUTES.toSeconds(minutes);
-        jdbcService.bookRoomInDataBase(roomName, startTimeSeconds, bookForSeconds);
+        boolean wasBooked = jdbcService.bookRoomInDataBase(roomName, startTimeSeconds, bookForSeconds);
 
-        return String.format("Room %s is booked", roomName);
+        return wasBooked ? String.format("Room %s is booked", roomName) : String.format("Room %s is NOT booked due to internal error", roomName);
     }
 }

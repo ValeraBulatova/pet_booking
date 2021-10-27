@@ -6,58 +6,59 @@ import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class ServicesTest {
 
 
     JdbcService jdbcService;
-    Services services;
+    BookingService bookingService;
 
 
     ServicesTest() {
         jdbcService = mock(JdbcService.class);
-        services = new Services(jdbcService);
+        bookingService = new BookingService(jdbcService);
     }
 
     @Test
     void testGetRoomStatus() {
-        Assertions.assertEquals("Please, input the room name", services.getRoomStatus(null));
+        Assertions.assertEquals("Please, input the room name", bookingService.getRoomStatus(null));
     }
 
     @Test
     void testBookRoomRoomNameNull() {
-        Assertions.assertEquals("Please input the room name", services.bookRoom(null, 20));
+        Assertions.assertEquals("Please input the room name", bookingService.bookRoom(null, 20));
     }
 
     @Test
     void testBookRoomInvalidRoomName() {
-        Assertions.assertEquals("Invalid room name", services.bookRoom("test", 20));
+        Assertions.assertEquals("Invalid room name", bookingService.bookRoom("test", 20));
     }
 
     @Test
     void testBookRoomValidRoomName() {
-        when(jdbcService.geAllRooms()).thenReturn(new HashMap<>(){{
+        when(jdbcService.geAllRooms()).thenReturn(new HashMap<String, Room>(){{
             put("V", new Room("V", 1, true));
         }});
-        Assertions.assertEquals("Room V is booked", services.bookRoom("V", 20));
+        Assertions.assertEquals("Room V is booked", bookingService.bookRoom("V", 20));
     }
 
     @Test
     void testBookOccupiedRoom() {
-        when(jdbcService.geAllRooms()).thenReturn(new HashMap<>(){{
+        when(jdbcService.geAllRooms()).thenReturn(new HashMap<String, Room>(){{
             put("V", new Room("V", 1, false));
         }});
-        Assertions.assertEquals("Room V is occupied", services.bookRoom("V", 20));
+        Assertions.assertEquals("Room V is occupied", bookingService.bookRoom("V", 20));
     }
 
     @Test
     void bookRoomTimeIsMoreThanAllowed() {
-        Assertions.assertEquals("Maximum allowed time for booking is 2 hours", services.bookRoom("V", 121));
+        Assertions.assertEquals("Maximum allowed time for booking is 2 hours", bookingService.bookRoom("V", 121));
     }
 
     @Test
     void bookRoomLessTimeThanAllowed() {
-        Assertions.assertEquals("Minimum allowed time for booking is 15 minutes", services.bookRoom("V", 14));
+        Assertions.assertEquals("Minimum allowed time for booking is 15 minutes", bookingService.bookRoom("V", 14));
     }
 }

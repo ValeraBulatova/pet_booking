@@ -2,12 +2,9 @@ package com.learning.java.booking.model;
 
 
 public class Room {
-
     private final String name;
-
     private final int id;
-
-    private boolean free;
+    private final boolean free;
 
     public Room(String name, int id, boolean free) {
         this.name = name;
@@ -23,4 +20,7 @@ public class Room {
         return free;
     }
 
+    public int getId() {
+        return id;
+    }
 }
