@@ -2,6 +2,14 @@ package com.learning.java.booking.model;
 
 public class BookRequest {
 
-    public String roomName;
-    public int minutes;
+    private String roomName;
+    private int minutes;
+
+    public String getRoomName() {
+        return roomName;
+    }
+
+    public int getMinutes() {
+        return minutes;
+    }
 }

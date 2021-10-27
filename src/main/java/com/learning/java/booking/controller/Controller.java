@@ -24,6 +24,6 @@ public class Controller {
 
     @PostMapping("/valera")
     public String bookRequiredRoom(@RequestBody BookRequest req) {
-        return services.bookRoom(req.roomName, req.minutes);
+        return services.bookRoom(req.getRoomName(), req.getMinutes());
     }
 }

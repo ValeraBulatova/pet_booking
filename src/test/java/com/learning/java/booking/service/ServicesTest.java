@@ -22,7 +22,7 @@ public class ServicesTest {
 
     @Test
     void testGetRoomStatus() {
-        Assertions.assertThrows(IllegalArgumentException.class, () -> services.getRoomStatus(null));
+        Assertions.assertEquals("Please, input the room name", services.getRoomStatus(null));
     }
 
     @Test

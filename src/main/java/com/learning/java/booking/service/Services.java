@@ -17,17 +17,14 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class Services {
 
-    private Map<String, Room> rooms;
-
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
     private final Logger LOGGER = LoggerFactory.getLogger(Services.class);
 
 
-    final private JdbcService jdbcService;
+    private final JdbcService jdbcService;
 
     public Services(JdbcService jdbcService) {
         this.jdbcService = jdbcService;
-        this.rooms = jdbcService.geAllRooms();
     }
 
     /**
@@ -37,10 +34,10 @@ public class Services {
      */
     public String getRoomStatus(String name) {
 
-        rooms = jdbcService.geAllRooms();
+        Map<String, Room> rooms = jdbcService.geAllRooms();
 
         if (name == null) {
-            throw new IllegalArgumentException("name is null");
+            return "Please, input the room name";
         }
 
         Room room = rooms.get(name);
@@ -54,6 +51,8 @@ public class Services {
     }
 
     public String getStatusOfAllRooms() {
+
+        Map<String, Room> rooms = jdbcService.geAllRooms();
 
         List<String> roomNames = new ArrayList<>(rooms.keySet());
 
@@ -76,7 +75,7 @@ public class Services {
             return "Please input the room name";
         }
 
-        rooms = jdbcService.geAllRooms();
+        Map<String, Room> rooms = jdbcService.geAllRooms();
         Room room = rooms.get(roomName);
 
         if(room == null){
