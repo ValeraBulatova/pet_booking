@@ -9,14 +9,14 @@ import java.util.HashMap;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-public class ServicesTest {
+class BookingServiceTest {
 
 
-    JdbcService jdbcService;
-    BookingService bookingService;
+    private final JdbcService jdbcService;
+    private final BookingService bookingService;
 
 
-    ServicesTest() {
+    BookingServiceTest() {
         jdbcService = mock(JdbcService.class);
         bookingService = new BookingService(jdbcService);
     }
@@ -38,15 +38,16 @@ public class ServicesTest {
 
     @Test
     void testBookRoomValidRoomName() {
-        when(jdbcService.geAllRooms()).thenReturn(new HashMap<String, Room>(){{
+        when(jdbcService.getAllRooms()).thenReturn(new HashMap<String, Room>(){{
             put("V", new Room("V", 1, true));
         }});
+        when(jdbcService.updateRoomStatus("V", 0, 0)).thenReturn(true);
         Assertions.assertEquals("Room V is booked", bookingService.bookRoom("V", 20));
     }
 
     @Test
     void testBookOccupiedRoom() {
-        when(jdbcService.geAllRooms()).thenReturn(new HashMap<String, Room>(){{
+        when(jdbcService.getAllRooms()).thenReturn(new HashMap<String, Room>(){{
             put("V", new Room("V", 1, false));
         }});
         Assertions.assertEquals("Room V is occupied", bookingService.bookRoom("V", 20));

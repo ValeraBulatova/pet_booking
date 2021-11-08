@@ -1,13 +1,13 @@
 package com.learning.java.booking.service;
 
 import com.learning.java.booking.model.Room;
-import org.apache.commons.lang3.NotImplementedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -25,6 +25,8 @@ public class JdbcService implements DAO {
 
     private static final String USER            = "sa";
     private static final String PASS            = "";
+
+    private int requestCounting = 0;
 
     public JdbcService() throws ClassNotFoundException {
         Class.forName(JDBC_DRIVER);
@@ -60,7 +62,6 @@ public class JdbcService implements DAO {
     }
 
 
-    // TODO: 27.10.2021 add retry
     boolean unbookRoomInDataBase(String roomName) {
         String request = String.format("update rooms set is_free = 'true', " +
                 "book_time = null, " +
@@ -77,11 +78,24 @@ public class JdbcService implements DAO {
 
     @Override
     public Room getRoom(String name) {
-        // TODO: 27.10.2021 learn SQL injection attacks
-        // https://www.youtube.com/watch?v=ciNHn38EyRc&ab_channel=Computerphile
 
-        // TODO: 27.10.2021 implement
-        throw new NotImplementedException();
+        Room room = null;
+
+        try (Connection connection = DriverManager.getConnection(DB_URL,USER,PASS)) {
+
+            PreparedStatement preparedStatement = connection.prepareStatement("select * from rooms where name = ?");
+            preparedStatement.setString(1, name);
+
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            room = mapResultToRoom(resultSet);
+
+            return room;
+
+        } catch (SQLException e) {
+            LOGGER.error("SQL Request failed", e);
+            return room;
+        }
     }
 
     @Override
@@ -90,7 +104,7 @@ public class JdbcService implements DAO {
         try(Connection connection = DriverManager.getConnection(DB_URL,USER,PASS);
             Statement statement = connection.createStatement()) {
 
-            ResultSet resultSet = statement.executeQuery("select * from rooms");
+            ResultSet resultSet = statement.executeQuery("select * from rooms limit 100");
 
             while (resultSet.next()) {
                 Room room = mapResultToRoom(resultSet);
@@ -107,6 +121,40 @@ public class JdbcService implements DAO {
 
     @Override
     public boolean updateRoomStatus(String roomName, long startBookingSeconds, long endBookingSeconds) {
-        // TODO: 27.10.2021 implement from two previous
-        throw new NotImplementedException();    }
+
+        String isRoomFree = "true";
+        String bookTime = null;
+        String bookFor = null;
+
+        Room room = getAllRooms().get(roomName);
+
+        if (room.isFree()) {
+            isRoomFree = "false";
+            bookTime = String.valueOf(startBookingSeconds);
+            bookFor = String.valueOf(endBookingSeconds);
+        }
+
+        String query = String.format("update rooms set is_free = '%s', " +
+                "book_time = %s, " +
+                "book_for = %s " +
+                "where name = '%s'", isRoomFree, bookTime, bookFor, roomName);
+
+        LOGGER.debug("Query is: " + query);
+
+        int result = requestToDataBase(query);
+        LOGGER.debug("Request to DB was send; result = " + result);
+
+        if (result != 0) {
+            LOGGER.info(String.format("Request to update status to %s, for room %s was executed", isRoomFree, roomName));
+        } else if (requestCounting == 0 && result == 0) {
+            LOGGER.warn(String.format("Request was executed + %d times", requestCounting));
+            requestCounting++;
+            updateRoomStatus(roomName, startBookingSeconds, endBookingSeconds);
+            LOGGER.warn("Request was executed twice");
+        } else {
+            LOGGER.error(String.format("Request to update status to %s, for room %s failed twice", isRoomFree, roomName));
+        }
+
+        return result!= 0;
+    }
 }

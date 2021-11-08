@@ -2,10 +2,10 @@ package com.learning.java.booking.service;
 
 
 import com.learning.java.booking.model.Room;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ public class BookingService {
      */
     public String getRoomStatus(String name) {
 
-        Map<String, Room> rooms = jdbcService.geAllRooms();
+        Map<String, Room> rooms = jdbcService.getAllRooms();
 
         if (name == null) {
             return "Please, input the room name";
@@ -53,7 +53,7 @@ public class BookingService {
 
     public String getStatusOfAllRooms() {
 
-        Map<String, Room> rooms = jdbcService.geAllRooms();
+        Map<String, Room> rooms = jdbcService.getAllRooms();
 
         List<String> roomNames = new ArrayList<>(rooms.keySet());
 
@@ -72,11 +72,11 @@ public class BookingService {
         } else if (minutes < 15) {
             return "Minimum allowed time for booking is 15 minutes";
         }
-        if (StringUtils.isEmpty(StringUtils.trim(roomName))) {
+        if (StringUtils.isEmpty(roomName)) {
             return "Please input the room name";
         }
 
-        Map<String, Room> rooms = jdbcService.geAllRooms();
+        Map<String, Room> rooms = jdbcService.getAllRooms();
         Room room = rooms.get(roomName);
 
         if (room == null) {
@@ -88,13 +88,13 @@ public class BookingService {
             return String.format("Room %s is occupied", roomName);
         }
 
-        executorService.schedule(() -> jdbcService.unbookRoomInDataBase(roomName), minutes, TimeUnit.MINUTES);
+        executorService.schedule(() -> jdbcService.updateRoomStatus(roomName, 0, 0 ), minutes, TimeUnit.MINUTES);
 
         Instant startTime = Instant.now();
 
         long startTimeSeconds = startTime.getEpochSecond();
         long bookForSeconds = startTimeSeconds + TimeUnit.MINUTES.toSeconds(minutes);
-        boolean wasBooked = jdbcService.bookRoomInDataBase(roomName, startTimeSeconds, bookForSeconds);
+        boolean wasBooked = jdbcService.updateRoomStatus(roomName, startTimeSeconds, bookForSeconds);
 
         return wasBooked ? String.format("Room %s is booked", roomName) : String.format("Room %s is NOT booked due to internal error", roomName);
     }
