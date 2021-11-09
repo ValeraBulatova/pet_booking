@@ -2,20 +2,20 @@ package com.learning.java.booking.service;
 
 
 import com.learning.java.booking.model.Room;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-// TODO: 27.10.2021 tests
 @Service
 public class BookingService {
 
@@ -34,23 +34,21 @@ public class BookingService {
      * @return information about room
      */
     public String getRoomStatus(String name) {
-
-        Map<String, Room> rooms = jdbcService.getAllRooms();
-
-        if (name == null) {
+        if (StringUtils.isEmpty(name)) {
             return "Please, input the room name";
         }
 
-        Room room = rooms.get(name);
-        if (room == null) {
+        Optional<Room> room = jdbcService.getRoom(name);
+        if (!room.isPresent()) {
             LOGGER.info(String.format("Room %s was not found in database", name));
             return "not found";
         }
 
-        String status = room.isFree() ? "free" : "occupied";
-        return String.format("Room %s is %s", room.getName(), status);
+        String status = room.get().isFree() ? "free" : "occupied";
+        return String.format("Room %s is %s", room.get().getName(), status);
     }
 
+    // TODO: 08.11.2021 remove
     public String getStatusOfAllRooms() {
 
         Map<String, Room> rooms = jdbcService.getAllRooms();
@@ -76,6 +74,7 @@ public class BookingService {
             return "Please input the room name";
         }
 
+        // TODO: 08.11.2021 replace with querying exact room
         Map<String, Room> rooms = jdbcService.getAllRooms();
         Room room = rooms.get(roomName);
 
@@ -90,11 +89,11 @@ public class BookingService {
 
         executorService.schedule(() -> jdbcService.updateRoomStatus(roomName, 0, 0 ), minutes, TimeUnit.MINUTES);
 
-        Instant startTime = Instant.now();
+        Instant now = Instant.now();
 
-        long startTimeSeconds = startTime.getEpochSecond();
-        long bookForSeconds = startTimeSeconds + TimeUnit.MINUTES.toSeconds(minutes);
-        boolean wasBooked = jdbcService.updateRoomStatus(roomName, startTimeSeconds, bookForSeconds);
+        long bookStart = now.getEpochSecond();
+        long bookEnd = bookStart + TimeUnit.MINUTES.toSeconds(minutes);
+        boolean wasBooked = jdbcService.updateRoomStatus(roomName, bookStart, bookEnd);
 
         return wasBooked ? String.format("Room %s is booked", roomName) : String.format("Room %s is NOT booked due to internal error", roomName);
     }

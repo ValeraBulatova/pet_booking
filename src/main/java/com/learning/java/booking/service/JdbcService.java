@@ -13,8 +13,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
-// TODO: 27.10.2021 injec attack
 @Service
 public class JdbcService implements DAO {
 
@@ -25,8 +25,6 @@ public class JdbcService implements DAO {
 
     private static final String USER            = "sa";
     private static final String PASS            = "";
-
-    private int requestCounting = 0;
 
     public JdbcService() throws ClassNotFoundException {
         Class.forName(JDBC_DRIVER);
@@ -51,54 +49,28 @@ public class JdbcService implements DAO {
         return new Room(name, id, free);
     }
 
-
-    boolean bookRoomInDataBase(String roomName, long startBookingSeconds, long endBookingSeconds) {
-        String request = String.format("update rooms set is_free = 'false', " +
-                "book_time = %d, " +
-                "book_for = %d " +
-                "where name = '%s'", startBookingSeconds, endBookingSeconds, roomName);
-        int result = requestToDataBase(request);
-        return result != 0;
-    }
-
-
-    boolean unbookRoomInDataBase(String roomName) {
-        String request = String.format("update rooms set is_free = 'true', " +
-                "book_time = null, " +
-                "book_for = null " +
-                "where name = '%s'", roomName);
-        int result = requestToDataBase(request);
-        if (result != 0) {
-            LOGGER.info(String.format("Request to set room %s free was executed", roomName));
-        } else {
-            LOGGER.error(String.format("Request to set room %s free failed", roomName));
-        }
-        return result != 0;
-    }
-
     @Override
-    public Room getRoom(String name) {
+    public Optional<Room> getRoom(String name) {
 
-        Room room = null;
+        try (Connection connection = DriverManager.getConnection(DB_URL, USER, PASS)) {
 
-        try (Connection connection = DriverManager.getConnection(DB_URL,USER,PASS)) {
-
+            // TODO: 09.11.2021 place limit
             PreparedStatement preparedStatement = connection.prepareStatement("select * from rooms where name = ?");
             preparedStatement.setString(1, name);
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
-            room = mapResultToRoom(resultSet);
+            Room room = mapResultToRoom(resultSet);
 
-            return room;
+            return Optional.of(room);
 
         } catch (SQLException e) {
-            LOGGER.error("SQL Request failed", e);
-            return room;
+            LOGGER.error("SQL request failed", e);
+            return Optional.empty();
         }
     }
 
-    @Override
+    // TODO: 08.11.2021 obsolete, remove
     public Map<String, Room> getAllRooms() {
         Map<String, Room> rooms = new HashMap<>();
         try(Connection connection = DriverManager.getConnection(DB_URL,USER,PASS);
@@ -119,42 +91,54 @@ public class JdbcService implements DAO {
         }
     }
 
+    // TODO: 08.11.2021 add docs, when passed with 0 - unbook
+    /**
+     *
+     * @param roomName
+     * @param startBook epoch seconds
+     * @param endBook epoch seconds
+     * @return
+     */
     @Override
-    public boolean updateRoomStatus(String roomName, long startBookingSeconds, long endBookingSeconds) {
+    public boolean updateRoomStatus(String roomName, long startBook, long endBook) {
 
-        String isRoomFree = "true";
-        String bookTime = null;
-        String bookFor = null;
-
+        // TODO: 08.11.2021 replace with querying exact room
         Room room = getAllRooms().get(roomName);
 
-        if (room.isFree()) {
-            isRoomFree = "false";
-            bookTime = String.valueOf(startBookingSeconds);
-            bookFor = String.valueOf(endBookingSeconds);
-        }
-
-        String query = String.format("update rooms set is_free = '%s', " +
-                "book_time = %s, " +
-                "book_for = %s " +
-                "where name = '%s'", isRoomFree, bookTime, bookFor, roomName);
-
+        boolean updateStatus = !room.isFree();
+        String query = getUpdateQuery(roomName, updateStatus, startBook, endBook);
         LOGGER.debug("Query is: " + query);
+
+        return updateWithRetry(query, roomName, 0);
+    }
+
+    private boolean updateWithRetry(String query, String roomName, int counter) {
+        // TODO: 09.11.2021 handle
+        String updateStatus = "TODO";
 
         int result = requestToDataBase(query);
         LOGGER.debug("Request to DB was send; result = " + result);
 
-        if (result != 0) {
-            LOGGER.info(String.format("Request to update status to %s, for room %s was executed", isRoomFree, roomName));
-        } else if (requestCounting == 0 && result == 0) {
-            LOGGER.warn(String.format("Request was executed + %d times", requestCounting));
-            requestCounting++;
-            updateRoomStatus(roomName, startBookingSeconds, endBookingSeconds);
-            LOGGER.warn("Request was executed twice");
+        if (result > 0) {
+            LOGGER.info(String.format("Request to update status to %s, for room %s was executed", updateStatus, roomName));
+        } else if (result == 0 && counter < 2) {
+            counter++;
+            updateWithRetry(query, roomName, counter);
+            LOGGER.warn(String.format("Request was executed + %d times", counter));
         } else {
-            LOGGER.error(String.format("Request to update status to %s, for room %s failed twice", isRoomFree, roomName));
+            LOGGER.error(String.format("Request to update status to %s, for room %s failed twice", updateStatus, roomName));
         }
 
-        return result!= 0;
+        return result != 0;
     }
+
+    // TODO: 09.11.2021 replace book_time -> book_start, book_for -> book_end
+    // TODO: 09.11.2021 finish
+    private String getUpdateQuery(String roomName, boolean isFree, long bookStart, long bookEnd) {
+        return String.format("update rooms set is_free = 'true', " +
+                "book_time = %d, " +
+                "book_for = null " +
+                "where name = '%s'", roomName);
+    }
+
 }

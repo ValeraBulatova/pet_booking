@@ -3,9 +3,11 @@ package com.learning.java.booking.service;
 import com.learning.java.booking.model.Room;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 
 import java.util.HashMap;
 
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -41,7 +43,8 @@ class BookingServiceTest {
         when(jdbcService.getAllRooms()).thenReturn(new HashMap<String, Room>(){{
             put("V", new Room("V", 1, true));
         }});
-        when(jdbcService.updateRoomStatus("V", 0, 0)).thenReturn(true);
+
+        when(jdbcService.updateRoomStatus(ArgumentMatchers.eq("V"), anyLong(), anyLong())).thenReturn(true);
         Assertions.assertEquals("Room V is booked", bookingService.bookRoom("V", 20));
     }
 
