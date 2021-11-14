@@ -8,9 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -44,23 +41,8 @@ public class BookingService {
             return "not found";
         }
 
-        String status = room.get().isFree() ? "free" : "occupied";
+        String status = room.get().isOccupied() ? "occupied" : "free";
         return String.format("Room %s is %s", room.get().getName(), status);
-    }
-
-    // TODO: 08.11.2021 remove
-    public String getStatusOfAllRooms() {
-
-        Map<String, Room> rooms = jdbcService.getAllRooms();
-
-        List<String> roomNames = new ArrayList<>(rooms.keySet());
-
-        String allStatuses = "";
-
-        for (String name : roomNames) {
-            allStatuses = allStatuses + getRoomStatus(name) + "\r\n";
-        }
-        return allStatuses;
     }
 
     public String bookRoom(String roomName, int minutes) {
@@ -74,16 +56,13 @@ public class BookingService {
             return "Please input the room name";
         }
 
-        // TODO: 08.11.2021 replace with querying exact room
-        Map<String, Room> rooms = jdbcService.getAllRooms();
-        Room room = rooms.get(roomName);
-
-        if (room == null) {
+        if (!jdbcService.getRoom(roomName).isPresent()) {
             LOGGER.info(String.format("Room %s was not found in database", roomName));
             return "Invalid room name";
         }
+        Room room = jdbcService.getRoom(roomName).get();
 
-        if (!room.isFree()) {
+        if (room.isOccupied()) {
             return String.format("Room %s is occupied", roomName);
         }
 
