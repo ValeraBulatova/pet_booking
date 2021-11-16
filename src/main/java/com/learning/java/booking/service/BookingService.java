@@ -56,11 +56,12 @@ public class BookingService {
             return "Please input the room name";
         }
 
-        if (!jdbcService.getRoom(roomName).isPresent()) {
+        Optional<Room> optionalRoom = jdbcService.getRoom(roomName);
+        if (!optionalRoom.isPresent()) {
             LOGGER.info(String.format("Room %s was not found in database", roomName));
             return "Invalid room name";
         }
-        Room room = jdbcService.getRoom(roomName).get();
+        Room room = optionalRoom.get();
 
         if (room.isOccupied()) {
             return String.format("Room %s is occupied", roomName);

@@ -55,8 +55,6 @@ public class JdbcService implements DAO {
             PreparedStatement preparedStatement = connection.prepareStatement("select * from rooms where name = ? limit 100");
             preparedStatement.setString(1, name);
 
-            LOGGER.debug("QUERY: " + preparedStatement.toString());
-
             ResultSet resultSet = preparedStatement.executeQuery();
 
             Room room = mapResultToRoom(resultSet);
@@ -71,7 +69,7 @@ public class JdbcService implements DAO {
 
     /**
      *
-     * @param roomName
+     * @param roomName name of the room
      * @param startBook epoch seconds; if value > 0 - book room, else - set room free
      * @param endBook epoch seconds
      * @return true if update was successful
@@ -79,35 +77,33 @@ public class JdbcService implements DAO {
     @Override
     public boolean updateRoomStatus(String roomName, long startBook, long endBook) {
 
-        if (!getRoom(roomName).isPresent()) {
+        Optional<Room> optionalRoom = getRoom(roomName);
+        if (!optionalRoom.isPresent()) {
             LOGGER.info(String.format("Room %s was not found in database", roomName));
             return false;
         }
-        Room room = getRoom(roomName).get();
+        Room room = optionalRoom.get();
 
-        boolean updateStatus = !room.isOccupied();
-        String query = getUpdateQuery(roomName, updateStatus, startBook, endBook);
+        boolean statusToUpdate = !room.isOccupied();
+        String query = getUpdateQuery(roomName, statusToUpdate, startBook, endBook);
         LOGGER.debug("Query is: " + query);
 
-        return updateWithRetry(query, roomName, 0);
+        return updateWithRetry(query, roomName, statusToUpdate,  0);
     }
 
-    private boolean updateWithRetry(String query, String roomName, int counter) {
-
-        Room room = getRoom(roomName).get();
-        boolean updateStatus = !room.isOccupied();
+    private boolean updateWithRetry(String query, String roomName, boolean statusToUpdate, int counter) {
 
         int result = requestToDataBase(query);
         LOGGER.debug("Request to DB was send; result = " + result);
 
         if (result > 0) {
-            LOGGER.info(String.format("Request to update status to %b, for room %s was executed", updateStatus, roomName));
+            LOGGER.info(String.format("Request to update status to %b, for room %s was executed", statusToUpdate, roomName));
         } else if (result == 0 && counter < 2) {
             counter++;
-            updateWithRetry(query, roomName, counter);
+            updateWithRetry(query, roomName, statusToUpdate, counter);
             LOGGER.warn(String.format("Request was executed + %d times", counter));
         } else {
-            LOGGER.error(String.format("Request to update status to %s, for room %s failed twice", updateStatus, roomName));
+            LOGGER.error(String.format("Request to update status to %s, for room %s failed twice", statusToUpdate, roomName));
         }
 
         return result != 0;
