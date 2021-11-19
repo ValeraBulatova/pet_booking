@@ -57,6 +57,12 @@ public class JdbcService implements DAO {
 
             ResultSet resultSet = preparedStatement.executeQuery();
 
+            boolean hasNext = resultSet.next();
+            if (!hasNext) {
+                LOGGER.warn(String.format("Room %s was not found in database", name));
+                return Optional.empty();
+            }
+
             Room room = mapResultToRoom(resultSet);
 
             return Optional.of(room);
@@ -119,7 +125,7 @@ public class JdbcService implements DAO {
         }
         return String.format("update rooms set occupied = '%b', " +
                 "book_start = %s, " +
-                "book_for = %s, " +
+                "book_end = %s " +
                 "where name = '%s'", occupied, startTime, endTime, roomName);
     }
 
