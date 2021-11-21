@@ -1,16 +1,13 @@
 package com.learning.java.booking.service;
 
 import com.learning.java.booking.model.Room;
+import com.learning.java.booking.model.RoomMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.Optional;
 
 @Service
@@ -18,59 +15,19 @@ public class JdbcService implements DAO {
 
     private final Logger LOGGER = LoggerFactory.getLogger(JdbcService.class);
 
-    private static final String JDBC_DRIVER     = "org.h2.Driver";
-    private static final String DB_URL          = "jdbc:h2:mem:home/booking";
+    private final JdbcTemplate jdbcTemplate;
 
-    private static final String USER            = "sa";
-    private static final String PASS            = "";
-
-    public JdbcService() throws ClassNotFoundException {
-        Class.forName(JDBC_DRIVER);
-    }
-
-    private int requestToDataBase(String query){
-        try(Connection connection = DriverManager.getConnection(DB_URL, USER, PASS);
-            Statement statement = connection.createStatement()) {
-
-            return statement.executeUpdate(query);
-        } catch (SQLException e){
-            LOGGER.error("SQL request failed", e);
-            return 0;
-        }
-    }
-
-
-    private Room mapResultToRoom(ResultSet result) throws SQLException {
-        String name = result.getString("name");
-        int id = result.getInt("id");
-        boolean free = result.getBoolean("occupied");
-        return new Room(name, id, free);
+    @Autowired
+    public JdbcService(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
     public Optional<Room> getRoom(String name) {
 
-        try (Connection connection = DriverManager.getConnection(DB_URL, USER, PASS)) {
+        return jdbcTemplate.query(String.format("select * from rooms where name = '%s' limit 100", name), new RoomMapper()).stream().findAny();
+//        return jdbcTemplate.query("select * from rooms where name = ? limit 100", name, new BeanPropertyRowMapper<>(Room.class)).stream().findAny();
 
-            PreparedStatement preparedStatement = connection.prepareStatement("select * from rooms where name = ? limit 100");
-            preparedStatement.setString(1, name);
-
-            ResultSet resultSet = preparedStatement.executeQuery();
-
-            boolean hasNext = resultSet.next();
-            if (!hasNext) {
-                LOGGER.warn(String.format("Room %s was not found in database", name));
-                return Optional.empty();
-            }
-
-            Room room = mapResultToRoom(resultSet);
-
-            return Optional.of(room);
-
-        } catch (SQLException e) {
-            LOGGER.error("SQL request failed", e);
-            return Optional.empty();
-        }
     }
 
     /**
@@ -99,7 +56,7 @@ public class JdbcService implements DAO {
 
     private boolean updateWithRetry(String query, String roomName, boolean statusToUpdate, int counter) {
 
-        int result = requestToDataBase(query);
+        int result = jdbcTemplate.update(query);
         LOGGER.debug("Request to DB was send; result = " + result);
 
         if (result > 0) {
