@@ -19,7 +19,7 @@ public class JdbcService implements DAO {
     private final Logger LOGGER = LoggerFactory.getLogger(JdbcService.class);
 
     private static final String JDBC_DRIVER     = "org.h2.Driver";
-    private static final String DB_URL          = "jdbc:h2:~/test";
+    private static final String DB_URL          = "jdbc:h2:mem:home/booking";
 
     private static final String USER            = "sa";
     private static final String PASS            = "";

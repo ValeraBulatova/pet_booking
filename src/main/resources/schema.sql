@@ -1,0 +1,1 @@
+create table rooms (id int primary key, name varchar(4) not null unique, occupied boolean(6) not null, book_start long, book_end long)
