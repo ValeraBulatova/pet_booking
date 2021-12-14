@@ -17,7 +17,6 @@ public class JdbcService implements DAO {
 
     private final JdbcTemplate jdbcTemplate;
 
-    @Autowired
     public JdbcService(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
