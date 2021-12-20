@@ -1,11 +1,12 @@
 package com.learning.java.booking.controller;
 
 import com.learning.java.booking.model.BookRequest;
+import com.learning.java.booking.model.RoomResponse;
 import com.learning.java.booking.service.BookingService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 
@@ -19,14 +20,14 @@ public class Controller {
     }
 
     @SuppressWarnings("unused")
-    @GetMapping("/valera")
-    public String getRoomStatus(@RequestParam(value = "name", defaultValue = "B") String name) {
+    @GetMapping("/rooms/status/{name}")
+    public RoomResponse getRoomStatus(@PathVariable(value="name") String name) {
         return services.getRoomStatus(name);
     }
 
     @SuppressWarnings("unused")
-    @PostMapping("/valera")
-    public String bookRequiredRoom(@RequestBody BookRequest req) {
+    @PostMapping("/rooms/book")
+    public RoomResponse bookRequiredRoom(@RequestBody BookRequest req) {
         return services.bookRoom(req.getRoomName(), req.getMinutes());
     }
 }
