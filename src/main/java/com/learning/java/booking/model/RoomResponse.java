@@ -1,21 +1,23 @@
 package com.learning.java.booking.model;
 
 
+import org.springframework.http.HttpStatus;
+
 public class RoomResponse {
 
     private String message;
-    private int code;
+    private String code;
 
-    public RoomResponse(String message, int code) {
+    public RoomResponse(String message, HttpStatus code) {
         this.message = message;
-        this.code = code;
+        this.code = String.valueOf(code);
     }
 
     public String getMessage() {
         return message;
     }
 
-    public int getCode() {
+    public String getCode() {
         return code;
     }
 

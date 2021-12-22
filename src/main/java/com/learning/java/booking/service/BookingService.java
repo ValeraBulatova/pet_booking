@@ -6,6 +6,9 @@ import com.learning.java.booking.model.RoomResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -30,40 +33,50 @@ public class BookingService {
      * @param name - required room
      * @return information about room
      */
-    public RoomResponse getRoomStatus(String name) {
+    public ResponseEntity<RoomResponse> getRoomStatus(String name) {
+        HttpHeaders responseHeaders = new HttpHeaders();
         if (StringUtils.isEmpty(name)) {
-            return new RoomResponse("Please, input the room name", 200);
+            responseHeaders.set("Status code", String.valueOf(HttpStatus.BAD_REQUEST));
+            return new ResponseEntity<>(new RoomResponse("Please, input the room name", HttpStatus.BAD_REQUEST), responseHeaders, HttpStatus.BAD_REQUEST);
         }
 
         Room room = jpaService.getRoom(name);
         if (room == null) {
             LOGGER.info(String.format("Room %s was not found in database", name));
-            return new RoomResponse(String.format("Room %s was not found", name), 200);
+            responseHeaders.set("Status code", String.valueOf(HttpStatus.NOT_FOUND));
+            return new ResponseEntity<>(new RoomResponse(String.format("Room %s was not found", name), HttpStatus.NOT_FOUND), responseHeaders, HttpStatus.NOT_FOUND);
         }
 
+        responseHeaders.set("Status code", String.valueOf(HttpStatus.OK));
         String status = room.isOccupied() ? "occupied" : "free";
-        return new RoomResponse(String.format("Room %s is %s", room.getName(), status), 200);
+        return new ResponseEntity<>(new RoomResponse(String.format("Room %s is %s", room.getName(), status), HttpStatus.OK), responseHeaders, HttpStatus.OK);
     }
 
-    public RoomResponse bookRoom(String roomName, int minutes) {
+    public ResponseEntity<RoomResponse> bookRoom(String roomName, int minutes) {
 
+        HttpHeaders responseHeaders = new HttpHeaders();
         if (minutes > 120) {
-            return new RoomResponse("Maximum allowed time for booking is 2 hours", 200);
+            responseHeaders.set("Status code", String.valueOf(HttpStatus.BAD_REQUEST));
+            return new ResponseEntity<>(new RoomResponse("Maximum allowed time for booking is 2 hours", HttpStatus.BAD_REQUEST), responseHeaders, HttpStatus.BAD_REQUEST);
         } else if (minutes < 1) {
-            return new RoomResponse("Minimum allowed time for booking is 15 minutes", 200);
+            responseHeaders.set("Status code", String.valueOf(HttpStatus.BAD_REQUEST));
+            return new ResponseEntity<>(new RoomResponse("Minimum allowed time for booking is 15 minutes", HttpStatus.BAD_REQUEST), responseHeaders, HttpStatus.BAD_REQUEST);
         }
         if (StringUtils.isEmpty(roomName)) {
-            return new RoomResponse("Please input the room name", 200);
+            responseHeaders.set("Status code", String.valueOf(HttpStatus.BAD_REQUEST));
+            return new ResponseEntity<>(new RoomResponse("Please input the room name", HttpStatus.BAD_REQUEST), responseHeaders, HttpStatus.BAD_REQUEST);
         }
 
         Room room = jpaService.getRoom(roomName);
         if (room == null) {
             LOGGER.info(String.format("Room %s was not found in database", roomName));
-            return new RoomResponse("Invalid room name", 200);
+            responseHeaders.set("Status code", String.valueOf(HttpStatus.BAD_REQUEST));
+            return new ResponseEntity<>(new RoomResponse("Invalid room name", HttpStatus.BAD_REQUEST), responseHeaders, HttpStatus.BAD_REQUEST);
         }
 
         if (room.isOccupied()) {
-            return new RoomResponse(String.format("Room %s is occupied", roomName), 200);
+            responseHeaders.set("Status code", String.valueOf(HttpStatus.OK));
+            return new ResponseEntity<>(new RoomResponse(String.format("Room %s is occupied", roomName), HttpStatus.OK), responseHeaders, HttpStatus.OK);
         }
 
         executorService.schedule(() -> jpaService.updateRoomStatus(roomName, 0, 0 ), minutes, TimeUnit.MINUTES);
@@ -78,7 +91,7 @@ public class BookingService {
 
         String message = jpaService.getRoom(roomName).isOccupied() ? String.format("Room %s is booked", roomName)
                 : String.format("Room %s is NOT booked due to internal error", roomName);
-
-        return new RoomResponse(message, 201);
+        responseHeaders.set("Status code", String.valueOf(HttpStatus.CREATED));
+        return new ResponseEntity<>(new RoomResponse(message, HttpStatus.CREATED), responseHeaders, HttpStatus.CREATED);
     }
 }
