@@ -32,38 +32,38 @@ public class BookingService {
      */
     public RoomResponse getRoomStatus(String name) {
         if (StringUtils.isEmpty(name)) {
-            return new RoomResponse("Please, input the room name");
+            return new RoomResponse("Please, input the room name", 200);
         }
 
         Room room = jpaService.getRoom(name);
         if (room == null) {
             LOGGER.info(String.format("Room %s was not found in database", name));
-            return new RoomResponse(String.format("Room %s was not found", name));
+            return new RoomResponse(String.format("Room %s was not found", name), 200);
         }
 
         String status = room.isOccupied() ? "occupied" : "free";
-        return new RoomResponse(String.format("Room %s is %s", room.getName(), status));
+        return new RoomResponse(String.format("Room %s is %s", room.getName(), status), 200);
     }
 
     public RoomResponse bookRoom(String roomName, int minutes) {
 
         if (minutes > 120) {
-            return new RoomResponse("Maximum allowed time for booking is 2 hours");
-        } else if (minutes < 15) {
-            return new RoomResponse("Minimum allowed time for booking is 15 minutes");
+            return new RoomResponse("Maximum allowed time for booking is 2 hours", 200);
+        } else if (minutes < 1) {
+            return new RoomResponse("Minimum allowed time for booking is 15 minutes", 200);
         }
         if (StringUtils.isEmpty(roomName)) {
-            return new RoomResponse("Please input the room name");
+            return new RoomResponse("Please input the room name", 200);
         }
 
         Room room = jpaService.getRoom(roomName);
         if (room == null) {
             LOGGER.info(String.format("Room %s was not found in database", roomName));
-            return new RoomResponse("Invalid room name");
+            return new RoomResponse("Invalid room name", 200);
         }
 
         if (room.isOccupied()) {
-            return new RoomResponse(String.format("Room %s is occupied", roomName));
+            return new RoomResponse(String.format("Room %s is occupied", roomName), 200);
         }
 
         executorService.schedule(() -> jpaService.updateRoomStatus(roomName, 0, 0 ), minutes, TimeUnit.MINUTES);
@@ -79,6 +79,6 @@ public class BookingService {
         String message = jpaService.getRoom(roomName).isOccupied() ? String.format("Room %s is booked", roomName)
                 : String.format("Room %s is NOT booked due to internal error", roomName);
 
-        return new RoomResponse(message);
+        return new RoomResponse(message, 201);
     }
 }
