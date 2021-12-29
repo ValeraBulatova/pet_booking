@@ -21,16 +21,35 @@ public class JpaService {
         return roomRepository.findByName(name);
     }
 
-    void updateRoomStatus(String roomName, Integer startBook, Integer endBook) {
+    boolean updateRoomStatus(String roomName, long startBook, long endBook) {
 
         Room room = roomRepository.findByName(roomName);
         if (room == null) {
-            LOGGER.info(String.format("Room %s was not found in database", roomName));
+            LOGGER.error(String.format("Room %s was not found in database", roomName));
+            return false;
         }
+        return updateWithRetry(room, startBook, endBook, 0);
+    }
+
+    boolean updateRoomStatus(Room room, long startBook, long endBook) {
+        return updateWithRetry(room, startBook, endBook, 0);
+    }
+
+    private boolean updateWithRetry(Room room, long startBook, long endBook, int counter) {
         boolean statusToUpdate = !room.isOccupied();
         room.setOccupied(statusToUpdate);
         room.setBookStart(startBook);
         room.setBookEnd(endBook);
-        roomRepository.save(room);
+        try {
+            roomRepository.save(room);
+            return true;
+        }catch (IllegalArgumentException e) {
+            if(counter < 2){
+                counter++;
+                return updateWithRetry(room, startBook, endBook, counter);
+            }
+            LOGGER.error("Connection to database failed");
+            return false;
+        }
     }
 }

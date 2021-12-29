@@ -17,9 +17,9 @@ public class Room {
     @Column(name = "occupied")
     private boolean occupied;
     @Column(name = "book_start")
-    private Integer bookStart;
+    private long bookStart;
     @Column(name = "book_end")
-    private Integer bookEnd;
+    private long bookEnd;
 
     public Room() {}
 
@@ -35,11 +35,11 @@ public class Room {
         this.occupied = occupied;
     }
 
-    public void setBookStart(Integer bookStart) {
+    public void setBookStart(long bookStart) {
         this.bookStart = bookStart;
     }
 
-    public void setBookEnd(Integer bookEnd) {
+    public void setBookEnd(long bookEnd) {
         this.bookEnd = bookEnd;
     }
 }
