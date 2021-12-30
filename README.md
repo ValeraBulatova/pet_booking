@@ -1,6 +1,6 @@
 # pet_booking
 
-A solution, which allows to get statuses of meeting rooms and book, if required.
+This service is aimed to book room and check booking status.
 
 The API is organized around REST. 
 API has endpoint - 'http://localhost:8080/valera' and accepts form-encoded request bodies, returns JSON - responses
