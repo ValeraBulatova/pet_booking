@@ -27,24 +27,29 @@ public class Controller {
     @SuppressWarnings("unused")
     @GetMapping("/room/{name}/status")
     @ResponseStatus
-    public ResponseEntity getRoomStatus(@PathVariable(value="name") String name) {
+    public ResponseEntity<RoomStatus> getRoomStatus(@PathVariable(value="name") String name) {
         try {
-            return new ResponseEntity<>(new RoomStatus(services.getRoomStatus(name), 200), HttpStatus.OK);
-        }catch (IllegalArgumentException e){
+            String roomStatus = services.getRoomStatus(name);
+            return new ResponseEntity<>(new RoomStatus(roomStatus, 200), HttpStatus.OK);
+        } catch (IllegalArgumentException e){
             return new ResponseEntity<>(new RoomStatus(e.getMessage(), 400), HttpStatus.BAD_REQUEST);
-        }catch (NoSuchElementException e){
+        } catch (NoSuchElementException e){
             return new ResponseEntity<>(new RoomStatus(e.getMessage(), 404), HttpStatus.NOT_FOUND);
         }
     }
 
     @SuppressWarnings("unused")
     @PostMapping("/room/book")
-    public ResponseEntity bookRequiredRoom(@RequestBody BookRequest req) {
+    public ResponseEntity<RoomStatus> bookRequiredRoom(@RequestBody BookRequest req) {
         try {
-            return new ResponseEntity<>(new RoomStatus(services.bookRoom(req.getRoomName(), req.getMinutes()), 202), HttpStatus.ACCEPTED);
-        }catch (IllegalArgumentException e){
+            String roomName = req.getRoomName();
+            boolean isBooked = services.bookRoom(roomName, req.getMinutes());
+            String message = isBooked ? String.format("Room %s is booked", roomName)
+                    : String.format("Room %s is occupied", roomName);
+            return new ResponseEntity<>(new RoomStatus(message, 200), HttpStatus.OK);
+        } catch (IllegalArgumentException e){
             return new ResponseEntity<>(new RoomStatus(e.getMessage(),400), HttpStatus.BAD_REQUEST);
-        }catch (NoSuchElementException e){
+        } catch (NoSuchElementException e){
             return new ResponseEntity<>(new RoomStatus(e.getMessage(),404), HttpStatus.NOT_FOUND);
         }
     }

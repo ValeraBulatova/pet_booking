@@ -43,8 +43,8 @@ public class JpaService {
         try {
             roomRepository.save(room);
             return true;
-        }catch (IllegalArgumentException e) {
-            if(counter < 2){
+        } catch (IllegalArgumentException e) {
+            if (counter < 2) {
                 counter++;
                 return updateWithRetry(room, startBook, endBook, counter);
             }
