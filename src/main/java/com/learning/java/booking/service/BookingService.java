@@ -53,12 +53,12 @@ public class BookingService {
 
         if (minutes > 120) {
             throw new IllegalArgumentException("Maximum allowed time for booking is 2 hours");
-        } else if (minutes < 1) {
+        } else if (minutes < 15) {
             throw new IllegalArgumentException("Minimum allowed time for booking is 15 minutes");
 
         }
         if (StringUtils.isEmpty(roomName)) {
-            throw new IllegalArgumentException("Please input the room name");
+            throw new IllegalArgumentException("Please, input the room name");
         }
 
         Room room = jpaService.getRoom(roomName);
