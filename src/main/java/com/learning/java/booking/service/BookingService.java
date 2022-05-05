@@ -49,15 +49,16 @@ public class BookingService {
     }
 
     @Transactional(isolation = Isolation.SERIALIZABLE)
-    public boolean bookRoom(String roomName, int minutes) {
+    public String bookRoom(String roomName, int minutes) {
 
         if (minutes > 120) {
             throw new IllegalArgumentException("Maximum allowed time for booking is 2 hours");
-        } else if (minutes < 1) {
+        } else if (minutes < 15) {
             throw new IllegalArgumentException("Minimum allowed time for booking is 15 minutes");
+
         }
         if (StringUtils.isEmpty(roomName)) {
-            throw new IllegalArgumentException("Room name is empty");
+            throw new IllegalArgumentException("Please, input the room name");
         }
 
         Room room = jpaService.getRoom(roomName);
@@ -67,7 +68,7 @@ public class BookingService {
         }
 
         if (room.isOccupied()) {
-            return false;
+            return  String.format("Room %s is occupied", roomName);
         }
 
         Instant now = Instant.now();
@@ -77,6 +78,7 @@ public class BookingService {
         boolean booked = jpaService.updateRoomStatus(room, now.getEpochSecond(), bookEnd);
         executorService.schedule(() -> jpaService.updateRoomStatus(roomName, 0, 0 ), minutes, TimeUnit.MINUTES);
 
-        return booked;
+        return booked ? String.format("Room %s is booked", roomName)
+                : String.format("Room %s is NOT booked due to internal error", roomName);
     }
 }
